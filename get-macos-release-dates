@@ -1,0 +1,37 @@
+#!/bin/sh
+curl -s https://robservatory.com/a-useless-analysis-of-os-x-release-dates/ | \
+awk -F '[<>]' '
+BEGIN {
+	m["Jan"] = 1
+	m["Feb"] = 2
+	m["Mar"] = 3
+	m["Apr"] = 4
+	m["May"] = 5
+	m["Jun"] = 6
+	m["Jul"] = 7
+	m["Aug"] = 8
+	m["Sep"] = 9
+	m["Oct"] = 10
+	m["Nov"] = 11
+	m["Dec"] = 12
+}
+/<td/ {
+	if ($0 ~ "rowspan") i = 0
+	r[++i] = $3 $5
+	if (i == 6) {
+		i = 1
+		split(r[2], date, " ")
+		version = r[4]
+		year = r[1] + 0
+		month = m[date[1]]
+		day = date[2] + 0
+		output[++n] = sprintf( \
+			"%s\t%04d-%02d-%02d", version, year, month, day \
+		)
+	}
+}
+END {
+	while (--n)
+		print output[n]
+}
+'

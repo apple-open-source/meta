@@ -1,0 +1,12 @@
+#!/bin/sh
+
+if [ ! "$1" ]; then
+	echo "usage: $0 macos|ios branch" >&2
+	exit 1
+fi
+
+git -C "$1" log "$2" --oneline --reverse | while read c v; do
+	git -C "$1" reset --hard $c
+	git -C "$1" push -f
+	git -C "$1" push -f --tags
+done

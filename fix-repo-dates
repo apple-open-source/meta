@@ -1,0 +1,28 @@
+#!/bin/sh
+
+if [ ! "$1" ]; then
+	echo "usage: $0 macos|ios" >&2
+	exit 1
+fi
+
+log=`mktemp`
+dates=`mktemp`
+git -C "$1" log --pretty='oneline' | sort -k 2b > $log
+sort -k 1b $1-release-dates | join -1 1 -2 2 - $log > $dates
+rm $log
+# Fix commits
+DATES=$dates git -C "$1" filter-branch -f --env-filter '
+date=`awk "\\$3==\"$GIT_COMMIT\"{print \\$2}" $DATES`
+echo date=$date
+export GIT_AUTHOR_DATE="${date}T00:00:00"
+export GIT_COMMITTER_DATE="${date}T00:00:00"
+'
+# Fix tags
+git -C "$1" log --oneline | while read c v; do
+	date=`awk "\\$1==\"$v\"{print \\$2}" "$1"-release-dates`
+	echo version=$v date=$date
+	export GIT_AUTHOR_DATE="${date}T00:00:00"
+	export GIT_COMMITTER_DATE="${date}T00:00:00"
+	git -C "$1" tag -f $v $c
+done
+rm $dates

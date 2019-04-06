@@ -1,0 +1,88 @@
+#!/bin/sh
+
+dir=$1
+version=$2
+url=$3
+date=$4
+
+if [ ! "$dir" ] || [ ! "$version" ] || [ ! "$url" ]; then
+	echo "usage: $0 dir version url [date]" >&2
+	exit 1
+fi
+
+echo dir=$dir
+echo version=$version
+echo url=$url
+echo date=$date
+
+download_and_extract() {
+	_name=$1
+	_version=$2
+	if [ "$_version" = "`cat $dir/$_name/.version`" ]; then return; fi
+	_file=$_name-$_version.tar.gz
+	_url=https://opensource.apple.com/tarballs/$_name/$_file
+	# Keep the most recent items in cache
+	(cd cache && ls -t | tail -n +1000 | xargs -I {} rm -- {})
+	# tar considers empty files to be valid, so check with gzip
+	if ! gzip -t cache/$_file; then
+		echo downloading $_url
+		_status=`curl -s -D - -o cache/$_file $_url | \
+			awk '{print $2; exit}'`
+		if [ "$_status" = 404 ]; then
+			return 4
+		elif [ "$_status" != 200 ]; then
+			return 1
+		fi
+	fi
+	_dirname=`tar -tf cache/$_file | head -n 1 | cut -f 1 -d '/'`
+	gzip -t cache/$_file &&
+	tar -C $dir -xzf cache/$_file &&
+	if [ -d "$dir/$_name" ]; then rm -r $dir/$_name; fi &&
+	mv $dir/$_dirname $dir/$_name &&
+	echo $_version > $dir/$_name/.version ||
+	return 1
+}
+
+echo .version > $dir/.git/info/exclude
+mkdir -p cache
+if [ "$date" ]; then
+	export GIT_AUTHOR_DATE="${date}T00:00:00"
+	export GIT_COMMITTER_DATE="${date}T00:00:00"
+fi
+curl -s $url | {
+	read comment name
+	echo $comment $name > $dir/release.txt
+	echo name=$name
+	while read _name _version _license; do
+		if [ ! "$_name" ]; then continue; fi
+		echo name=$_name version=$_version
+		if [ "$names" ]; then
+			names="$names|$_name"
+		else
+			names=$_name
+		fi
+		printf "%s\t%s\t%s\n" "$_name" "$_version" "$_license" \
+			>> $dir/release.txt
+		download_and_extract $_name $_version
+		_status=$?
+		if [ "$_status" = 4 ]; then
+			echo skipping
+		elif [ "$_status" != 0 ]; then
+			exit 1
+		fi
+	done
+	removed=`printf "%s\n" $dir/*/ | grep -E -v "$dir/($names)/"`
+	# macOS 10.0.1 - 10.0.3 are missing most things so ignore them
+	if
+		[ "$removed" ] &&
+		[ "$name" != "Mac OS X 10.0.1 SUCheetah4L13" ] &&
+		[ "$name" != "Mac OS X 10.0.2 SU2Cheetah4P12" ] &&
+		[ "$name" != "Mac OS X 10.0.3 SU3Cheetah4P13" ]
+	then
+		echo REMOVING "$removed"
+		rm -r $removed
+	fi
+	git -C $dir add .
+	git -C $dir commit --allow-empty -m $version
+	git -C $dir tag $version
+}

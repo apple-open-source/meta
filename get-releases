@@ -1,0 +1,26 @@
+#!/bin/sh
+
+case "$1" in
+	"macos")
+		regex='(macos|mac-os-x|os-x)-[0-9]'
+		;;
+	"ios")
+		regex='(ios|iphone)-[0-9]'
+		;;
+	*)
+		echo "usage: $0 macos|ios" >&2
+		exit 1
+esac
+
+curl -s https://opensource.apple.com | awk -F '[<>]' -v OFS='\t' '
+/G5|x86/ { next }
+/\/release\/'"$regex"'/ {
+	split($2, attr, "\"")
+	split(attr[2], path, "/")
+	split(path[3], file, ".")
+	url = sprintf("https://opensource.apple.com/text/%s.txt", file[1])
+	sub(/\.(G5|ppc|x86)/, "", $3)
+	version = $3
+	print version, url | "sort -n -t . -k 1 -k 2 -k 3"
+}
+'

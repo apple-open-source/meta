@@ -1,0 +1,22 @@
+#!/bin/sh
+name=$1
+
+git init $name
+git -C $name config user.email opensource@apple.com
+git -C $name config user.name opensource.apple.com
+current=`git -C $name describe --tags`
+if [ ! "$current" ]; then found=1; fi
+./get-releases $name | while read version url; do
+	if [ ! "$found" ]; then
+		if [ "$current" = "$version" ]; then
+			found=1
+		fi
+		continue
+	fi
+	if [ "$name" = "macos" ]; then
+		date=`awk "\\$1==\"$version\"{print \\$2}" macos-release-dates`
+	fi
+	if ! ./commit-release $name $version $url $date; then
+		exit 1
+	fi
+done
