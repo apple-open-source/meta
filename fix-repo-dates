@@ -7,8 +7,8 @@ fi
 
 log=`mktemp`
 dates=`mktemp`
-git -C "$1" log --pretty='oneline' | sort -k 2b > $log
-sort -k 1b $1-release-dates | join -1 1 -2 2 - $log > $dates
+git -C "$1" log --pretty='oneline' | sort -k 2b,2 > $log
+sort -k 1b,1 $1-release-dates | join -1 1 -2 2 - $log > $dates
 rm $log
 # Fix commits
 DATES=$dates git -C "$1" filter-branch -f --env-filter '

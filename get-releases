@@ -21,6 +21,6 @@ curl -s https://opensource.apple.com | awk -F '[<>]' -v OFS='\t' '
 	url = sprintf("https://opensource.apple.com/text/%s.txt", file[1])
 	sub(/\.(G5|ppc|x86)/, "", $3)
 	version = $3
-	print version, url | "sort -n -t . -k 1 -k 2 -k 3"
+	print version, url | "sort -n -t . -k 1,1 -k 2,2 -k 3,3"
 }
 '
