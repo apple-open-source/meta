@@ -46,8 +46,8 @@ download_and_extract() {
 echo .version > $dir/.git/info/exclude
 mkdir -p cache
 if [ "$date" ]; then
-	export GIT_AUTHOR_DATE="${date}T00:00:00"
-	export GIT_COMMITTER_DATE="${date}T00:00:00"
+	export GIT_AUTHOR_DATE="${date}T00:00Z"
+	export GIT_COMMITTER_DATE="${date}T00:00Z"
 fi
 curl -s $url | {
 	read comment name
