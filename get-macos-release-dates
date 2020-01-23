@@ -1,5 +1,5 @@
 #!/bin/sh
-curl -s https://robservatory.com/a-useless-analysis-of-os-x-release-dates/ | \
+curl -s https://robservatory.com/a-full-history-of-macos-os-x-release-dates-and-rates/ | \
 awk -F '[<>]' '
 BEGIN {
 	m["Jan"] = 1
@@ -21,6 +21,7 @@ BEGIN {
 	if (i == 6) {
 		i = 1
 		split(r[2], date, " ")
+		gsub(/[[:space:]]/, "", r[4])
 		version = r[4]
 		year = r[1] + 0
 		month = m[date[1]]
