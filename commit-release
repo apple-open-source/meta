@@ -49,8 +49,10 @@ if [ "$date" ]; then
 	export GIT_AUTHOR_DATE="${date}T00:00Z"
 	export GIT_COMMITTER_DATE="${date}T00:00Z"
 fi
-curl -s $url | {
-	read comment name
+curl -fs $url | {
+	if ! read comment name; then
+		exit 1
+	fi
 	echo $comment $name > $dir/release.txt
 	echo name=$name
 	while read _name _version _license; do
