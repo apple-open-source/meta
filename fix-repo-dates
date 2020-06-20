@@ -1,7 +1,7 @@
 #!/bin/sh
 
 if [ ! "$1" ]; then
-	echo "usage: $0 macos|ios" >&2
+	echo "usage: $0 product" >&2
 	exit 1
 fi
 

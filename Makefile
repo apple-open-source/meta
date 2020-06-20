@@ -1,6 +1,6 @@
-all: macos ios
+all: macos ios developer-tools
 
-macos ios: .force
+macos ios developer-tools: .force
 	./create-repo $@
 
 .force:

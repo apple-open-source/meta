@@ -1,0 +1,36 @@
+#!/bin/sh
+
+curl https://xcodereleases.com | awk -F '[<>]' '
+BEGIN {
+	m["Jan"] = 1
+	m["Feb"] = 2
+	m["Mar"] = 3
+	m["Apr"] = 4
+	m["May"] = 5
+	m["Jun"] = 6
+	m["Jul"] = 7
+	m["Aug"] = 8
+	m["Sep"] = 9
+	m["Oct"] = 10
+	m["Nov"] = 11
+	m["Dec"] = 12
+}
+/class="name"/ {
+	match($3, /[0-9]+(\.[0-9]+)+/)
+	version = substr($3, RSTART, RLENGTH)
+}
+/class="release"/ { release = $3 }
+/class="date"/ {
+	split($3, date, " ")
+	day = date[1] + 0
+	month = m[date[2]]
+	year = date[3] + 0
+	if (release != "GM")
+		next
+	output[++n] = sprintf("%s\t%04d-%02d-%02d", version, year, month, day)
+}
+END {
+	while (n)
+		print output[n--]
+}
+'

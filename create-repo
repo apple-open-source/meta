@@ -13,9 +13,7 @@ if [ ! "$current" ]; then found=1; fi
 		fi
 		continue
 	fi
-	if [ "$name" = "macos" ]; then
-		date=`awk "\\$1==\"$version\"{print \\$2}" macos-release-dates`
-	fi
+	date=`awk "\\$1==\"$version\"{print \\$2}" $name-release-dates`
 	if ! ./commit-release $name $version $url $date; then
 		exit 1
 	fi

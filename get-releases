@@ -7,13 +7,17 @@ case "$1" in
 	"ios")
 		regex='(ios|iphone)-[0-9]'
 		;;
+	"developer-tools")
+		regex='developer-tools-[0-9]'
+		;;
 	*)
-		echo "usage: $0 macos|ios" >&2
+		echo "usage: $0 macos|ios|developer-tools" >&2
 		exit 1
 esac
 
 curl -s https://opensource.apple.com | awk -F '[<>]' -v OFS='\t' '
 /G5|x86/ { next }
+/3.1b/ { next }
 /\/release\/'"$regex"'/ {
 	split($2, attr, "\"")
 	split(attr[2], path, "/")
