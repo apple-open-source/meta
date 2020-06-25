@@ -37,7 +37,8 @@ download_and_extract() {
 	_dirname=`tar -tf cache/$_file | head -n 1 | cut -f 1 -d '/'`
 	gzip -t cache/$_file &&
 	tar -C $dir -xzf cache/$_file &&
-	if [ -d "$dir/$_name" ]; then rm -r $dir/$_name; fi &&
+	find $dir/$_dirname -type d -exec chmod +w {} + &&
+	if [ -d "$dir/$_name" ]; then rm -rf $dir/$_name; fi &&
 	mv $dir/$_dirname $dir/$_name &&
 	echo $_version > $dir/$_name/.version ||
 	return 1
@@ -82,7 +83,7 @@ curl -fs $url | {
 		[ "$name" != "Mac OS X 10.0.3 SU3Cheetah4P13" ]
 	then
 		echo REMOVING "$removed"
-		rm -r $removed
+		rm -rf $removed
 	fi
 	git -C $dir add .
 	git -C $dir commit --allow-empty -m $version
