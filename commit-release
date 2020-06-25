@@ -37,7 +37,8 @@ download_and_extract() {
 	_dirname=`tar -tf cache/$_file | head -n 1 | cut -f 1 -d '/'`
 	gzip -t cache/$_file &&
 	tar -C $dir -xzf cache/$_file &&
-	find $dir/$_dirname -type d -exec chmod +w {} + &&
+	find $dir/$_dirname -type d ! -perm -u+w -exec chmod +w {} + \
+		-o -type f ! -perm -u+r -exec chmod +r {} + &&
 	if [ -d "$dir/$_name" ]; then rm -rf $dir/$_name; fi &&
 	mv $dir/$_dirname $dir/$_name &&
 	echo $_version > $dir/$_name/.version ||
