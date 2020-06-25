@@ -76,11 +76,15 @@ curl -fs $url | {
 	done
 	removed=`printf "%s\n" $dir/*/ | grep -E -v "$dir/($names)/"`
 	# macOS 10.0.1 - 10.0.3 are missing most things so ignore them
+	# Same with some Developer Tools versions
 	if
 		[ "$removed" ] &&
 		[ "$name" != "Mac OS X 10.0.1 SUCheetah4L13" ] &&
 		[ "$name" != "Mac OS X 10.0.2 SU2Cheetah4P12" ] &&
-		[ "$name" != "Mac OS X 10.0.3 SU3Cheetah4P13" ]
+		[ "$name" != "Mac OS X 10.0.3 SU3Cheetah4P13" ] &&
+		[ "$name" != "Developer Tools 2.1 8B1024" ] &&
+		[ "$name" != "Developer Tools 3.0 9A581" ] &&
+		[ "$name" != "Developer Tools 3.2 10A432" ]
 	then
 		echo REMOVING "$removed"
 		rm -rf $removed
