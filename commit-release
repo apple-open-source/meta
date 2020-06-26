@@ -91,6 +91,6 @@ curl -fs $url | {
 		rm -rf $removed
 	fi
 	git -C $dir add .
-	git -C $dir commit --allow-empty -m $version
+	git -C $dir commit -m $version
 	git -C $dir tag $version
 }
