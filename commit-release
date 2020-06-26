@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -eu
+
 dir=$1
 version=$2
 url=$3
@@ -35,14 +37,13 @@ download_and_extract() {
 		fi
 	fi
 	_dirname=`tar -tf cache/$_file | head -n 1 | cut -f 1 -d '/'`
-	gzip -t cache/$_file &&
-	tar -C $dir -xzf cache/$_file &&
+	gzip -t cache/$_file
+	tar -C $dir -xzf cache/$_file
 	find $dir/$_dirname -type d ! -perm -u+w -exec chmod +w {} + \
-		-o -type f ! -perm -u+r -exec chmod +r {} + &&
-	if [ -d "$dir/$_name" ]; then rm -rf $dir/$_name; fi &&
-	mv $dir/$_dirname $dir/$_name &&
-	echo $_version > $dir/$_name/.version ||
-	return 1
+		-o -type f ! -perm -u+r -exec chmod +r {} +
+	if [ -d "$dir/$_name" ]; then rm -rf $dir/$_name; fi
+	mv $dir/$_dirname $dir/$_name
+	echo $_version > $dir/$_name/.version
 }
 
 echo .version > $dir/.git/info/exclude
@@ -51,10 +52,9 @@ if [ "$date" ]; then
 	export GIT_AUTHOR_DATE="${date}T00:00Z"
 	export GIT_COMMITTER_DATE="${date}T00:00Z"
 fi
+names=
 curl -fs $url | {
-	if ! read comment name; then
-		exit 1
-	fi
+	read comment name
 	echo $comment $name > $dir/release.txt
 	echo name=$name
 	while read _name _version _license; do
@@ -67,15 +67,15 @@ curl -fs $url | {
 		fi
 		printf "%s\t%s\t%s\n" "$_name" "$_version" "$_license" \
 			>> $dir/release.txt
-		download_and_extract $_name $_version
-		_status=$?
+		download_and_extract $_name $_version &&
+		_status=$? || _status=$?
 		if [ "$_status" = 4 ]; then
 			echo skipping
 		elif [ "$_status" != 0 ]; then
 			exit 1
 		fi
 	done
-	removed=`printf "%s\n" $dir/*/ | grep -E -v "$dir/($names)/"`
+	removed=`printf "%s\n" $dir/*/ | grep -E -v "$dir/($names)/" || true`
 	# macOS 10.0.1 - 10.0.3 are missing most things so ignore them
 	# Same with some Developer Tools versions
 	if
