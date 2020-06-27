@@ -7,8 +7,9 @@ if [ ! "$1" ]; then
 	exit 1
 fi
 
-git -C "$1" log "$2" --oneline --reverse | while read c v; do
+start=`git -C "$1" rev-parse origin/master`
+git -C "$1" rev-list --reverse "$start".."$2" | while read c; do
 	git -C "$1" reset --hard $c
 	git -C "$1" push -f
-	git -C "$1" push -f --tags
+	git -C "$1" push -f origin "`git -C "$1" describe --tags $c`"
 done
