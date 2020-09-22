@@ -1,0 +1,29 @@
+name: Update product repo
+
+on:
+  workflow_dispatch:
+    inputs:
+      product:
+        description: 'Product repo to update'
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
+        with:
+          repository: apple-open-source/${{ github.event.inputs.product }}
+          path: ${{ github.event.inputs.product }}
+          ssh-key: ${{ secrets.SSH_KEY }}
+      - name: Update ${{ github.event.inputs.product }} repo
+        run: |
+          cd "${{ github.event.inputs.product }}"
+          ref=$(git ls-remote --tags --sort="v:refname" | tail -n1 | cut -f2)
+          git fetch origin "$ref:$ref"
+          cd ..
+          make "${{ github.event.inputs.product }}"
+          cd "${{ github.event.inputs.product }}"
+          git push && git push --tags
