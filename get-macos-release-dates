@@ -1,6 +1,6 @@
 #!/bin/sh
 curl -s https://robservatory.com/a-full-history-of-macos-os-x-release-dates-and-rates/ | \
-awk -F '[<>]' '
+awk -F '[<>]' -v RS='<' '
 BEGIN {
 	m["Jan"] = 1
 	m["Feb"] = 2
@@ -15,9 +15,13 @@ BEGIN {
 	m["Nov"] = 11
 	m["Dec"] = 12
 }
-/<td/ {
+/^td/ {
+	cell = 1
 	if ($0 ~ "rowspan") i = 0
-	r[++i] = $3 $5
+	r[++i] = ""
+}
+/^\/td/ {
+	cell = 0
 	if (i == 6) {
 		i = 1
 		split(r[2], date, " ")
@@ -31,6 +35,7 @@ BEGIN {
 		)
 	}
 }
+cell { r[i] = r[i] $2 }
 END {
 	while (--n)
 		print output[n]
