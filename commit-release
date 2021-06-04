@@ -3,18 +3,14 @@
 set -eu
 
 dir=$1
-version=$2
-url=$3
-date=$4
+date=$2
 
-if [ ! "$dir" ] || [ ! "$version" ] || [ ! "$url" ]; then
-	echo "usage: $0 dir version url [date]" >&2
-	exit 1
+if [ ! "$dir" ]; then
+	echo "usage: $0 dir [date]" >&2
+	exit 2
 fi
 
 echo dir=$dir
-echo version=$version
-echo url=$url
 echo date=$date
 
 download_and_extract() {
@@ -56,45 +52,48 @@ if [ "$date" ]; then
 	export GIT_AUTHOR_DATE="${date}T00:00Z"
 	export GIT_COMMITTER_DATE="${date}T00:00Z"
 fi
+
+read comment name
+version=`echo "$name" | awk '{print $(NF-1)}'`
+
+echo name=$name
+echo version=$version
+
 names=
-curl -fs $url | {
-	read comment name
-	echo $comment $name > $dir/release.txt
-	echo name=$name
-	while read _name _version _license; do
-		if [ ! "$_name" ]; then continue; fi
-		echo name=$_name version=$_version
-		if [ "$names" ]; then
-			names="$names|$_name"
-		else
-			names=$_name
-		fi
-		printf "%s\t%s\t%s\n" "$_name" "$_version" "$_license" \
-			>> $dir/release.txt
-		download_and_extract $_name $_version &&
-		_status=$? || _status=$?
-		if [ "$_status" = 4 ]; then
-			echo skipping
-		elif [ "$_status" != 0 ]; then
-			exit 1
-		fi
-	done
-	removed=`printf "%s\n" $dir/*/ | grep -E -v "$dir/($names)/" || true`
-	# macOS 10.0.1 - 10.0.3 are missing most things so ignore them
-	# Same with some Developer Tools versions
-	if
-		[ "$removed" ] &&
-		[ "$name" != "Mac OS X 10.0.1 SUCheetah4L13" ] &&
-		[ "$name" != "Mac OS X 10.0.2 SU2Cheetah4P12" ] &&
-		[ "$name" != "Mac OS X 10.0.3 SU3Cheetah4P13" ] &&
-		[ "$name" != "Developer Tools 2.1 8B1024" ] &&
-		[ "$name" != "Developer Tools 3.0 9A581" ] &&
-		[ "$name" != "Developer Tools 3.2 10A432" ]
-	then
-		echo REMOVING "$removed"
-		rm -rf $removed
+echo $comment $name > $dir/release.txt
+while read _name _version _license; do
+	if [ ! "$_name" ]; then continue; fi
+	echo name=$_name version=$_version
+	if [ "$names" ]; then
+		names="$names|$_name"
+	else
+		names=$_name
 	fi
-	git -C $dir add .
-	git -C $dir commit -m $version
-	git -C $dir tag $version
-}
+	printf "%s\t%s\t%s\n" "$_name" "$_version" "$_license" \
+		>> $dir/release.txt
+	download_and_extract $_name $_version &&
+	_status=$? || _status=$?
+	if [ "$_status" = 4 ]; then
+		echo skipping
+	elif [ "$_status" != 0 ]; then
+		exit 1
+	fi
+done
+removed=`printf "%s\n" $dir/*/ | grep -E -v "$dir/($names)/" || true`
+# macOS 10.0.1 - 10.0.3 are missing most things so ignore them
+# Same with some Developer Tools versions
+if
+	[ "$removed" ] &&
+	[ "$name" != "Mac OS X 10.0.1 SUCheetah4L13" ] &&
+	[ "$name" != "Mac OS X 10.0.2 SU2Cheetah4P12" ] &&
+	[ "$name" != "Mac OS X 10.0.3 SU3Cheetah4P13" ] &&
+	[ "$name" != "Developer Tools 2.1 8B1024" ] &&
+	[ "$name" != "Developer Tools 3.0 9A581" ] &&
+	[ "$name" != "Developer Tools 3.2 10A432" ]
+then
+	echo REMOVING "$removed"
+	rm -rf $removed
+fi
+git -C $dir add .
+git -C $dir commit -m $version
+git -C $dir tag $version

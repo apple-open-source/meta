@@ -19,5 +19,10 @@ if [ ! "$current" ]; then found=1; fi
 		continue
 	fi
 	date=`awk "\\$1==\"$version\"{print \\$2}" $name-release-dates`
-	./commit-release $name $version $url $date
+	if ! out=`curl -fsS "$url"`; then
+		file="$(basename "$url" .txt).plist"
+		url="$(dirname $(dirname "$url"))/plist/$file"
+		out=`curl -fsS "$url" | ./plist2txt "$name" "$version"`
+	fi
+	printf '%s\n' "$out" | ./commit-release $name $date
 done
