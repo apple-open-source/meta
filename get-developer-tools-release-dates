@@ -25,7 +25,7 @@ BEGIN {
 	day = date[1] + 0
 	month = m[date[2]]
 	year = date[3] + 0
-	if (release != "GM")
+	if (release != "GM" && release != "Release")
 		next
 	output[++n] = sprintf("%s\t%04d-%02d-%02d", version, year, month, day)
 }
