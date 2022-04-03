@@ -24,6 +24,4 @@ jobs:
           ref=$(git ls-remote --tags --sort="v:refname" | tail -n1 | cut -f2)
           git fetch origin "$ref:$ref"
           cd ..
-          make "${{ github.event.inputs.product }}"
-          cd "${{ github.event.inputs.product }}"
-          git push && git push --tags
+          PUSH_RELEASE=1 make "${{ github.event.inputs.product }}"

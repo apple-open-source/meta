@@ -96,3 +96,6 @@ fi
 git -C $dir add .
 git -C $dir commit -m $version
 git -C $dir tag $version
+if [ "${PUSH_RELEASE-}" ]; then
+	git -C $dir push && git -C $dir push --tags
+fi
