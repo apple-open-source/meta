@@ -15,15 +15,23 @@ BEGIN {
 	m["Nov"] = 11
 	m["Dec"] = 12
 }
+/^tr/ {
+	i = 0
+	for (j=1; spans[j]; j++) {
+		++i
+		--spans[j]
+	}
+}
 /^td/ {
+	++i
 	cell = 1
-	if ($0 ~ "rowspan") i = 0
-	r[++i] = ""
+	if (match($0, /rowspan=".*"/))
+		spans[i] = substr($0, RSTART+9, RLENGTH-10) - 1
+	r[i] = ""
 }
 /^\/td/ {
 	cell = 0
 	if (i == 6) {
-		i = 1
 		split(r[2], date, " ")
 		gsub(/[[:space:]]/, "", r[4])
 		version = r[4]

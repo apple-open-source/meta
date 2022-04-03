@@ -3,7 +3,8 @@
 set -eu
 
 dir=$1
-date=$2
+version=$2
+date=$3
 
 if [ ! "$dir" ]; then
 	echo "usage: $0 dir [date]" >&2
@@ -18,14 +19,14 @@ download_and_extract() {
 	_version=$2 &&
 	if [ "$_version" = "`cat $dir/$_name/.version`" ]; then return; fi &&
 	_file=$_name-$_version.tar.gz &&
-	_url=https://opensource.apple.com/tarballs/$_name/$_file &&
+	_url=https://github.com/apple-oss-distributions/$_name/archive/$_file &&
 	# Keep the most recent items in cache
 	(cd cache && ls -t | tail -n +1000 | xargs -I {} rm -- {}) &&
 	# tar considers empty files to be valid, so check with gzip
 	if ! gzip -t cache/$_file; then
 		echo downloading $_url
-		_status=`curl -s -D - -o cache/$_file $_url | \
-			awk '{print $2; exit}'`
+		_status=`curl -sL -D - -o cache/$_file $_url | \
+			awk '/^HTTP/{s=$2}END{print s}'`
 		if [ "$_status" = 404 ]; then
 			return 4
 		elif [ "$_status" != 200 ]; then
@@ -54,14 +55,13 @@ if [ "$date" ]; then
 fi
 
 read comment name
-version=`echo "$name" | awk '{print $(NF-1)}'`
 
 echo name=$name
 echo version=$version
 
 names=
 echo $comment $name > $dir/release.txt
-while read _name _version _license; do
+while read _name _version; do
 	if [ ! "$_name" ]; then continue; fi
 	echo name=$_name version=$_version
 	if [ "$names" ]; then
@@ -69,8 +69,7 @@ while read _name _version _license; do
 	else
 		names=$_name
 	fi
-	printf "%s\t%s\t%s\n" "$_name" "$_version" "$_license" \
-		>> $dir/release.txt
+	printf "%s\t%s\n" "$_name" "$_version" >> $dir/release.txt
 	download_and_extract $_name $_version &&
 	_status=$? || _status=$?
 	if [ "$_status" = 4 ]; then
@@ -84,12 +83,12 @@ removed=`printf "%s\n" $dir/*/ | grep -E -v "$dir/($names)/" || true`
 # Same with some Developer Tools versions
 if
 	[ "$removed" ] &&
-	[ "$name" != "Mac OS X 10.0.1 SUCheetah4L13" ] &&
-	[ "$name" != "Mac OS X 10.0.2 SU2Cheetah4P12" ] &&
-	[ "$name" != "Mac OS X 10.0.3 SU3Cheetah4P13" ] &&
-	[ "$name" != "Developer Tools 2.1 8B1024" ] &&
-	[ "$name" != "Developer Tools 3.0 9A581" ] &&
-	[ "$name" != "Developer Tools 3.2 10A432" ]
+	[ "$name" != "Mac OS X 10.0.1" ] &&
+	[ "$name" != "Mac OS X 10.0.2" ] &&
+	[ "$name" != "Mac OS X 10.0.3" ] &&
+	[ "$name" != "Developer Tools 2.1" ] &&
+	[ "$name" != "Developer Tools 3.0" ] &&
+	[ "$name" != "Developer Tools 3.2" ]
 then
 	echo REMOVING "$removed"
 	rm -rf $removed

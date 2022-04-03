@@ -11,18 +11,18 @@ found=
 current=`git -C $name describe --tags || true`
 if [ ! "$current" ]; then found=1; fi
 
-./get-releases $name | while read version url; do
+releases=$(./get-releases)
+cat $name-release-dates | while read version date; do
 	if [ ! "$found" ]; then
 		if [ "$current" = "$version" ]; then
 			found=1
 		fi
 		continue
 	fi
-	date=`awk "\\$1==\"$version\"{print \\$2}" $name-release-dates`
-	if ! out=`curl -fsS "$url"`; then
-		file="$(basename "$url" .txt).plist"
-		url="$(dirname $(dirname "$url"))/plist/$file"
-		out=`curl -fsS "$url" | ./plist2txt "$name" "$version"`
+	release=$(echo "$releases" | ./get-release-info $name $version)
+	if [ ! "$release" ]; then
+		echo skipping $name $version >&2
+		continue
 	fi
-	printf '%s\n' "$out" | ./commit-release $name $date
+	echo "$release" | ./commit-release $name $version $date
 done

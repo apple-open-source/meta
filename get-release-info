@@ -1,0 +1,40 @@
+#!/bin/sh
+
+set -eu
+
+version=$(echo "$2" | sed 's/\./\\./g')
+
+regex=
+case "$1" in
+	"macos")
+		regex="(macOS|OS X|Mac OS X) $version(\.ppc)?"
+		;;
+	"ios")
+		regex="iOS $version"
+		;;
+	"developer-tools")
+		regex="Developer Tools $version"
+		;;
+	*)
+		echo "usage: $0 macos|ios|developer-tools" >&2
+		exit 1
+esac
+
+awk -F: -v OFS='\t' '
+{ gsub(/"/, "") }
+found {
+	if ($2 == "") {
+		found = 0
+		next
+	}
+	if (heading) {
+		print heading
+		heading = ""
+	}
+	print $1, $2
+}
+/^'"$regex"':$/ {
+	found = 1
+	heading = "# " $1
+}
+'
