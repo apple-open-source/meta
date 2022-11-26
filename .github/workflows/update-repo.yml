@@ -12,12 +12,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/checkout@v2
+      - id: key
+        run: |
+          printf "name=%s_SSH_KEY\n" "$(
+            echo "${{ github.event.inputs.product }}" |
+            tr '[:lower:]-' '[:upper:]_'
+          )" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
         with:
           repository: apple-open-source/${{ github.event.inputs.product }}
           path: ${{ github.event.inputs.product }}
-          ssh-key: ${{ secrets.SSH_KEY }}
+          ssh-key: ${{ secrets[steps.key.outputs.name] }}
       - name: Update ${{ github.event.inputs.product }} repo
         run: |
           cd "${{ github.event.inputs.product }}"
