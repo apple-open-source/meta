@@ -30,8 +30,7 @@ BEGIN {
 	r[i] = ""
 }
 /^\/td/ {
-	cell = 0
-	if (i == 6) {
+	if (cell && i == 6) {
 		split(r[2], date, " ")
 		gsub(/[[:space:]]/, "", r[4])
 		version = r[4]
@@ -42,6 +41,7 @@ BEGIN {
 			"%s\t%04d-%02d-%02d", version, year, month, day \
 		)
 	}
+	cell = 0
 }
 cell { r[i] = r[i] $2 }
 END {
