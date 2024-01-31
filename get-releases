@@ -4,4 +4,4 @@ set -eu
 
 base_url=https://opensource.apple.com
 url=$base_url$(curl -s $base_url/releases/ | grep -o '/scripts/main.*\.js')
-curl -s "$url" | grep -o '{macOS:.*"}}}}' | sed 's/[{},]/\n/g' | sed '/^$/d'
+curl -s "$url" | grep -o 'macOS:.*"}}}}' | tr -s '{},' '\n'
