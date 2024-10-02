@@ -94,6 +94,7 @@ then
 	rm -rf $removed
 fi
 git -C $dir add .
+git -C $dir lfs ls-files -n | xargs -E '' -I {} git -C $dir rm -f -- {}
 git -C $dir commit -m $version
 git -C $dir tag $version
 if [ "${PUSH_RELEASE-}" ]; then
