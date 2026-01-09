@@ -4,7 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       product:
+        type: choice
         description: 'Product repo to update'
+        options:
+          - macos
+          - developer-tools
         required: true
 
 jobs:
@@ -18,8 +22,8 @@ jobs:
             echo "${{ github.event.inputs.product }}" |
             tr '[:lower:]-' '[:upper:]_'
           )" >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@v3
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
         with:
           repository: apple-open-source/${{ github.event.inputs.product }}
           path: ${{ github.event.inputs.product }}
